@@ -15,6 +15,7 @@ use Inertia\Inertia;
 |
 */
 
+
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
@@ -22,14 +23,18 @@ Route::get('/', function () {
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
+})->name('welcome');
+
+Route::middleware(['auth:sanctum', 'verified'])->prefix('user')->group(function () {
+
 });
 
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-])->group(function () {
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
+Route::middleware(['auth:sanctum', 'verified', 'role:admin,manager,content-manager,web-developer,copywriter,marketing-specialist'])->prefix('admin')->namespace('App\Http\Controllers\Admin')->group(function () {
+    Route::get('/', IndexController::class)->name('admin.main');
+    Route::get('/dashboard', DashboardController::class)->name('admin.dashboard');
+
+    Route::prefix('task')->namespace('Task')->group(function () {
+        Route::get('/create', IndexController::class)->name('admin.task.create');
+        Route::post('/', StoreController::class)->name('admin.task.store');
+    });
 });
